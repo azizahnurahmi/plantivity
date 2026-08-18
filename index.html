@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GrowList — Schedule &amp; Productivity</title>
+<meta name="theme-color" content="#4B6B4A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234B6B4A'/%3E%3Cpath d='M50 78V44' stroke='%23EEF1E7' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='34' r='22' fill='%238FB08A'/%3E%3Ccircle cx='34' cy='46' r='14' fill='%238FB08A'/%3E%3Ccircle cx='66' cy='46' r='14' fill='%238FB08A'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234B6B4A'/%3E%3Cpath d='M50 78V44' stroke='%23EEF1E7' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='34' r='22' fill='%238FB08A'/%3E%3Ccircle cx='34' cy='46' r='14' fill='%238FB08A'/%3E%3Ccircle cx='66' cy='46' r='14' fill='%238FB08A'/%3E%3C/svg%3E">
+<link rel="manifest" id="manifestLink">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#EEF1E7;
+    --canvas-deep:#E3E8DA;
+    --paper:#F7F8F2;
+    --ink:#1F2E22;
+    --ink-soft:#4B5A45;
+    --ink-faint:#7C8A76;
+    --moss:#4B6B4A;
+    --moss-deep:#33492F;
+    --sprout:#8FB08A;
+    --sprout-pale:#D7E4D1;
+    --amber:#C98A3B;
+    --amber-pale:#F0DCB8;
+    --clay:#AC5B4E;
+    --clay-pale:#EAD2CC;
+    --line:rgba(31,46,34,0.14);
+    --shadow: 0 1px 2px rgba(31,46,34,0.06), 0 8px 20px -10px rgba(31,46,34,0.18);
+    --radius: 20px;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Space Mono', 'SFMono-Regular', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--canvas);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(31,46,34,0.045) 1px, transparent 0);
+    background-size: 18px 18px;
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:92px;
+  }
+  .app{max-width:480px;margin:0 auto;padding:0 16px;}
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 4px 8px;
+  }
+  .brand{display:flex;align-items:center;gap:9px;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+  .brand-name{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-0.01em;}
+  .date-pill{
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);
+    background:var(--paper);border:1px solid var(--line);border-radius:999px;
+    padding:5px 11px;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabbar{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--paper);
+    border-top:1px solid var(--line);
+    display:flex;justify-content:center;
+    z-index:40;
+    padding:6px max(6px, env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-bottom));
+  }
+  .tabbar-inner{display:flex;gap:2px;max-width:480px;width:100%;padding:0 8px;}
+  .tab-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;padding:8px 4px 6px;cursor:pointer;
+    color:var(--ink-faint);font-family:var(--font-body);font-size:11px;font-weight:600;
+    border-radius:14px;
+  }
+  .tab-btn svg{width:20px;height:20px;}
+  .tab-btn.active{color:var(--moss-deep);background:var(--sprout-pale);}
+
+  .view{display:none;animation:fadein .25s ease;}
+  .view.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-family:var(--font-display);font-size:16px;font-weight:600;
+    margin:0 0 4px;letter-spacing:-0.01em;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--moss-deep);margin:0 0 6px;font-weight:700;
+  }
+  .muted{color:var(--ink-soft);font-size:13px;line-height:1.5;}
+
+  /* ---------- Tree hero ---------- */
+  .garden-card{
+    background:linear-gradient(180deg, var(--paper) 0%, var(--sprout-pale) 130%);
+    text-align:center;padding-top:22px;
+  }
+  .stage-label{font-family:var(--font-display);font-size:19px;font-weight:600;margin:10px 0 2px;}
+  .stage-sub{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-bottom:14px;}
+  .tree-wrap{width:100%;max-width:280px;margin:0 auto;}
+  .week-ring{display:flex;justify-content:center;gap:7px;margin:14px 0 4px;}
+  .ring-dot{
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--canvas-deep);border:1px solid var(--line);
+    font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);
+  }
+  .ring-dot.done{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .ring-dot.today{box-shadow:0 0 0 2px var(--amber);}
+  .ring-dot.missed{background:var(--clay-pale);border-color:var(--clay);color:var(--clay);}
+
+  .goal-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
+  .goal-bar{flex:1;height:8px;border-radius:999px;background:var(--canvas-deep);overflow:hidden;}
+  .goal-bar-fill{height:100%;background:var(--moss);border-radius:999px;transition:width .4s ease;}
+  .goal-pct{font-family:var(--font-mono);font-size:12px;font-weight:700;min-width:38px;text-align:right;}
+
+  /* ---------- Checklist ---------- */
+  .section-title{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:22px 0 10px;
+  }
+  .section-title h2{font-family:var(--font-display);font-size:18px;margin:0;}
+  .btn{
+    font-family:var(--font-body);font-weight:700;font-size:13px;
+    border:none;border-radius:12px;padding:9px 14px;cursor:pointer;
+  }
+  .btn-primary{background:var(--moss);color:#fff;}
+  .btn-primary:active{background:var(--moss-deep);}
+  .btn-ghost{background:transparent;color:var(--moss-deep);border:1px solid var(--line);}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:10px;}
+  .btn-block{width:100%;text-align:center;}
+
+  .task-item{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 4px;border-bottom:1px solid var(--line);
+  }
+  .task-item:last-child{border-bottom:none;}
+  .check{
+    width:26px;height:26px;border-radius:8px;border:2px solid var(--moss);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:transparent;cursor:pointer;
+  }
+  .check svg{width:15px;height:15px;opacity:0;transition:opacity .15s;}
+  .task-item.done .check{background:var(--moss);}
+  .task-item.done .check svg{opacity:1;}
+  .task-item.done .task-title{text-decoration:line-through;color:var(--ink-faint);}
+  .task-body{flex:1;min-width:0;}
+  .task-title{font-weight:700;font-size:14.5px;}
+  .task-meta{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .task-del{background:none;border:none;color:var(--clay);cursor:pointer;padding:6px;font-size:16px;line-height:1;}
+  .empty-state{
+    text-align:center;padding:30px 10px;color:var(--ink-faint);font-size:13px;
+  }
+  .empty-state .emoji{font-size:28px;display:block;margin-bottom:8px;}
+
+  /* ---------- Add form ---------- */
+  .form-row{margin-bottom:12px;}
+  .form-row label{display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:5px;}
+  .form-row input[type=text], .form-row input[type=time], .form-row input[type=number]{
+    width:100%;font-family:var(--font-body);font-size:14.5px;color:var(--ink);
+    background:var(--canvas-deep);border:1px solid var(--line);border-radius:11px;
+    padding:10px 12px;
+  }
+  .day-picker{display:flex;gap:6px;flex-wrap:wrap;}
+  .day-chip{
+    font-family:var(--font-mono);font-size:11px;font-weight:700;
+    width:34px;height:34px;border-radius:10px;border:1px solid var(--line);
+    background:var(--canvas-deep);color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .day-chip.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+  .switch{position:relative;width:42px;height:24px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:var(--canvas-deep);border:1px solid var(--line);border-radius:999px;cursor:pointer;transition:.2s;}
+  .slider:before{content:"";position:absolute;width:18px;height:18px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .switch input:checked + .slider{background:var(--moss);}
+  .switch input:checked + .slider:before{transform:translateX(18px);}
+
+  .sheet-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(31,46,34,0.45);z-index:50;
+    align-items:flex-end;justify-content:center;
+  }
+  .sheet-backdrop.open{display:flex;}
+  .sheet{
+    background:var(--paper);width:100%;max-width:480px;border-radius:22px 22px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;
+    animation:slideup .22s ease;
+  }
+  @keyframes slideup{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .sheet-head h2{font-family:var(--font-display);font-size:18px;margin:0;}
+  .sheet-close{background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;padding:4px;}
+
+  /* ---------- Stats grid ---------- */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat-box{
+    background:var(--canvas-deep);border-radius:14px;padding:12px 14px;
+  }
+  .stat-num{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--moss-deep);}
+  .stat-label{font-size:11.5px;color:var(--ink-soft);margin-top:2px;line-height:1.3;}
+
+  /* ---------- Chart ---------- */
+  .chart-wrap{margin-top:6px;}
+  .bar-row{display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:10px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bar{width:100%;max-width:26px;border-radius:6px 6px 3px 3px;background:var(--sprout);position:relative;min-height:3px;transition:height .4s ease;}
+  .bar.goal-met{background:var(--moss);}
+  .bar-day{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);margin-top:6px;}
+  .goal-line-label{font-family:var(--font-mono);font-size:10px;color:var(--amber);display:flex;align-items:center;gap:5px;margin-top:8px;}
+  .goal-line-swatch{width:12px;height:2px;background:var(--amber);display:inline-block;}
+
+  /* ---------- Garden history ---------- */
+  .history-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px;}
+  .history-item{
+    background:var(--canvas-deep);border-radius:14px;padding:10px 6px;text-align:center;
+  }
+  .history-item .mini-tree{font-size:22px;line-height:1;}
+  .history-item .h-label{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);margin-top:4px;}
+
+  /* ---------- Articles ---------- */
+  .article-card{
+    display:block;text-decoration:none;color:inherit;
+    background:var(--canvas-deep);border-radius:14px;padding:14px;margin-bottom:10px;
+    border:1px solid transparent;
+  }
+  .article-card:active{border-color:var(--moss);}
+  .article-source{
+    font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--moss-deep);font-weight:700;margin-bottom:5px;display:block;
+  }
+  .article-title{font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1.35;margin-bottom:4px;}
+  .article-desc{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .featured-tag{
+    display:inline-block;background:var(--amber);color:#fff;font-family:var(--font-mono);
+    font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;margin-bottom:10px;
+  }
+
+  /* ---------- Info box ---------- */
+  .info-box{
+    background:var(--amber-pale);border-radius:14px;padding:12px 14px;font-size:12.5px;
+    color:#5c4322;line-height:1.5;margin-bottom:14px;
+  }
+  .info-box b{color:#3d2c16;}
+
+  /* ---------- Install card ---------- */
+  .install-steps{margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.7;}
+
+  /* alarm modal */
+  .alarm-modal{
+    display:none;position:fixed;inset:0;background:rgba(31,46,34,0.6);z-index:60;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .alarm-modal.open{display:flex;}
+  .alarm-box{
+    background:var(--paper);border-radius:20px;padding:26px 22px;text-align:center;max-width:320px;width:100%;
+    animation:pop .25s ease;
+  }
+  @keyframes pop{from{transform:scale(.9);opacity:0;}to{transform:none;opacity:1;}}
+  .alarm-emoji{font-size:38px;margin-bottom:8px;}
+  .alarm-title{font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:4px;}
+  .alarm-time{font-family:var(--font-mono);color:var(--ink-soft);font-size:13px;margin-bottom:18px;}
+
+  ::selection{background:var(--sprout);color:var(--ink);}
+  input:focus, button:focus{outline:2px solid var(--amber);outline-offset:1px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .view, .sheet, .alarm-box{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#4B6B4A"/><path d="M50 78V44" stroke="#EEF1E7" stroke-width="7" stroke-linecap="round"/><circle cx="50" cy="33" r="21" fill="#8FB08A"/><circle cx="33" cy="46" r="13" fill="#8FB08A"/><circle cx="67" cy="46" r="13" fill="#8FB08A"/></svg>
+      <span class="brand-name">GrowList</span>
+    </div>
+    <div class="date-pill" id="todayPill">—</div>
+  </div>
+
+  <!-- ================= TODAY VIEW ================= -->
+  <section class="view active" id="view-today">
+
+    <div class="card garden-card">
+      <div class="eyebrow" id="weekRangeLabel">THIS WEEK</div>
+      <div class="tree-wrap" id="treeSvgHolder"></div>
+      <div class="stage-label" id="stageLabel">Seed planted</div>
+      <div class="stage-sub" id="stageSub">Stage 0 of 7</div>
+
+      <div class="week-ring" id="weekRing"></div>
+
+      <div class="goal-row">
+        <span class="goal-bar"><span class="goal-bar-fill" id="goalBarFill" style="width:0%"></span></span>
+        <span class="goal-pct" id="goalPctLabel">0%</span>
+      </div>
+      <div class="muted" style="margin-top:6px;">Daily target: <b id="goalTargetLabel">80%</b> of activities completed for the tree to grow today.</div>
+    </div>
+
+    <div class="section-title">
+      <h2>Today's Activities</h2>
+      <button class="btn btn-primary" id="openAddSheet">+ Add</button>
+    </div>
+
+    <div class="card" style="padding:6px 14px;">
+      <div id="taskList"></div>
+    </div>
+
+  </section>
+
+  <!-- ================= GARDEN / HISTORY VIEW ================= -->
+  <section class="view" id="view-garden">
+    <div class="card">
+      <div class="eyebrow">My Garden</div>
+      <h2>Weekly growth history</h2>
+      <p class="muted">Every week, your tree is harvested into here and a new one starts from a seed.</p>
+      <div class="history-grid" id="historyGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Goal Settings</div>
+      <h2>Daily target</h2>
+      <p class="muted" style="margin-bottom:10px;">Percentage of activities that must be completed each day for the tree to grow.</p>
+      <div class="form-row" style="display:flex;align-items:center;gap:10px;margin-bottom:0;">
+        <input type="number" id="goalInput" min="10" max="100" step="10" style="max-width:90px;">
+        <span class="muted">%</span>
+        <button class="btn btn-ghost btn-sm" id="saveGoalBtn">Save</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Notifications &amp; Alarm</div>
+      <h2>Activity reminders</h2>
+      <div class="toggle-row">
+        <span class="muted">Browser notification permission</span>
+        <button class="btn btn-ghost btn-sm" id="notifPermBtn">Request permission</button>
+      </div>
+      <div class="toggle-row">
+        <span class="muted">Alarm sound when a schedule arrives</span>
+        <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="slider"></span></label>
+      </div>
+      <div class="info-box" style="margin-top:12px;margin-bottom:0;">
+        <b>Honest note:</b> notifications &amp; alarms run through the browser, so they only work while GrowList is open (foreground or backgrounded is fine, just don't fully close the browser). This isn't a system-level alarm like your phone's built-in clock.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Install on Phone</div>
+      <h2>Add to home screen</h2>
+      <ol class="install-steps">
+        <li><b>Android (Chrome):</b> tap the three-dot menu → "Add to Home screen" / "Install app".</li>
+        <li><b>iPhone (Safari):</b> tap the Share icon → "Add to Home Screen".</li>
+      </ol>
+      <p class="muted" style="margin-top:8px;">To make it fully installable and work offline like a real PWA, upload this file to free static hosting (e.g. Netlify/GitHub Pages) — opening it directly from a local file still works, but some browsers limit install features for local files.</p>
+    </div>
+
+    <div class="card" style="border-color:var(--clay);">
+      <div class="eyebrow" style="color:var(--clay);">Danger Zone</div>
+      <button class="btn btn-ghost btn-block" id="resetBtn" style="color:var(--clay);border-color:var(--clay-pale);">Delete all data</button>
+    </div>
+  </section>
+
+  <!-- ================= INSIGHTS VIEW ================= -->
+  <section class="view" id="view-insights">
+    <div class="card">
+      <div class="eyebrow">This Week's Summary</div>
+      <h2>Summary</h2>
+      <div class="stat-grid" id="summaryGrid" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Productivity Chart</div>
+      <h2>Last 7 days</h2>
+      <div class="chart-wrap">
+        <div class="bar-row" id="chartBars"></div>
+      </div>
+      <div class="goal-line-label"><span class="goal-line-swatch"></span> Dark green bar = daily target reached</div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Daily Goal</div>
+      <h2>Today's progress</h2>
+      <p class="muted" id="dailyGoalDetail">—</p>
+    </div>
+  </section>
+
+  <!-- ================= READ VIEW ================= -->
+  <section class="view" id="view-read">
+    <div class="card">
+      <div class="eyebrow">Today's Read</div>
+      <h2>Today's article</h2>
+      <p class="muted" style="margin-bottom:12px;">One productivity &amp; self-improvement article from a trusted source, rotating daily.</p>
+      <div id="featuredArticle"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Full Collection</div>
+      <h2>All reads</h2>
+      <div id="articleList" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Bottom tab bar -->
+<nav class="tabbar">
+  <div class="tabbar-inner">
+    <button class="tab-btn active" data-view="today">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Today
+    </button>
+    <button class="tab-btn" data-view="garden">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V10M12 10c0-4-3-7-7-7 0 4 3 7 7 7Zm0 0c0-4 3-7 7-7 0 4-3 7-7 7Z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Garden
+    </button>
+    <button class="tab-btn" data-view="insights">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 20V10M12 20V4M20 20v-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Insights
+    </button>
+    <button class="tab-btn" data-view="read">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5v-13Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Read
+    </button>
+  </div>
+</nav>
+
+<!-- Add activity sheet -->
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Add Activity</h2>
+      <button class="sheet-close" id="closeSheet">✕</button>
+    </div>
+    <div class="form-row">
+      <label for="taskTitle">Activity name</label>
+      <input type="text" id="taskTitle" placeholder="e.g. Morning workout" maxlength="60">
+    </div>
+    <div class="form-row">
+      <label for="taskTime">Time (for alarm &amp; notification)</label>
+      <input type="time" id="taskTime" value="07:00">
+    </div>
+    <div class="form-row">
+      <label>Repeat on</label>
+      <div class="day-picker" id="dayPicker"></div>
+    </div>
+    <div class="form-row toggle-row" style="margin-bottom:4px;">
+      <span class="muted">Enable alarm sound</span>
+      <label class="switch"><input type="checkbox" id="taskAlarmToggle" checked><span class="slider"></span></label>
+    </div>
+    <button class="btn btn-primary btn-block" id="saveTaskBtn" style="margin-top:14px;padding:13px;">Save Activity</button>
+  </div>
+</div>
+
+<!-- Alarm firing modal -->
+<div class="alarm-modal" id="alarmModal">
+  <div class="alarm-box">
+    <div class="alarm-emoji">⏰</div>
+    <div class="alarm-title" id="alarmTaskTitle">Activity</div>
+    <div class="alarm-time" id="alarmTaskTime">07:00</div>
+    <button class="btn btn-primary btn-block" id="dismissAlarm" style="padding:13px;">Dismiss Alarm</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= CONSTANTS ======================= */
+  var STORAGE_KEY = "growlist:data:v1";
+  var DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+  var DAY_LABELS_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var STAGE_LABELS = [
+    "Seed planted","Sprout emerging","Stem strengthening","Branches growing",
+    "Leaves thickening","Starting to flower","Bearing fruit","Mature tree"
+  ];
+
+  var ARTICLES = [
+    {
+      source:"James Clear",
+      title:"The Habits Guide: How to Build Good Habits and Break Bad Ones",
+      desc:"A complete, practical breakdown of how habits form and how to reshape them — a natural companion to daily checklists.",
+      url:"https://jamesclear.com/habits"
+    },
+    {
+      source:"James Clear",
+      title:"The Ultimate Habit Tracker Guide",
+      desc:"Why tracking small wins (like your daily tree growth) reinforces consistency and motivation.",
+      url:"https://jamesclear.com/habit-tracker"
+    },
+    {
+      source:"Harvard Business Review",
+      title:"Manage Your Energy, Not Your Time",
+      desc:"A classic HBR piece on renewing physical, emotional, mental and spiritual energy instead of just managing hours.",
+      url:"https://hbr.org/2007/10/manage-your-energy-not-your-time"
+    },
+    {
+      source:"Psychology Today",
+      title:"Procrastination — the Basics",
+      desc:"An evidence-based overview of why we delay tasks and what actually helps us start.",
+      url:"https://www.psychologytoday.com/us/basics/procrastination"
+    },
+    {
+      source:"MIT Sloan Management Review",
+      title:"How Multitasking at Work Can Slow You Down",
+      desc:"Research-backed insight on why doing one thing at a time often beats juggling many.",
+      url:"https://sloanreview.mit.edu/article/how-multitasking-at-work-can-slow-you-down/"
+    },
+    {
+      source:"MIT Sloan Management Review",
+      title:"Own Your Time, Boost Your Productivity",
+      desc:"Practical tactics for beating procrastination and taking control of a busy schedule.",
+      url:"https://sloanreview.mit.edu/article/own-your-time-boost-your-productivity/"
+    }
+  ];
+
+  /* ======================= STATE ======================= */
+  var state = load();
+  var audioCtx = null;
+  var alarmInterval = null;
+  var firedToday = {}; // activityId -> true, reset at day rollover
+
+  function todayISO(d){
+    d = d || new Date();
+    var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return y+"-"+m+"-"+day;
+  }
+  function parseISO(s){ var p=s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function addDays(d, n){ var r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function mondayOf(d){
+    var day = d.getDay(); // 0=Sun
+    var diff = (day===0? -6 : 1-day);
+    return addDays(d, diff);
+  }
+
+  function defaultData(){
+    var mon = mondayOf(new Date());
+    return {
+      activities: [],
+      completions: {},
+      weekStartISO: todayISO(mon),
+      dailyGoalPercent: 80,
+      gardenHistory: [],
+      lastOpenedDate: todayISO()
+    };
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultData();
+      var d = JSON.parse(raw);
+      if(!d.activities) return defaultData();
+      return d;
+    }catch(e){ return defaultData(); }
+  }
+  function save(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* ======================= WEEK / DAY ROLLOVER ======================= */
+  function rolloverIfNeeded(){
+    var today = todayISO();
+    if(state.lastOpenedDate !== today){
+      firedToday = {};
+      state.lastOpenedDate = today;
+    }
+    var curMonday = mondayOf(new Date());
+    var curMondayISO = todayISO(curMonday);
+    if(state.weekStartISO !== curMondayISO){
+      // archive the just-finished week
+      var stage = computeStageForWeek(state.weekStartISO);
+      var stats = computeWeekStats(state.weekStartISO);
+      state.gardenHistory.unshift({
+        weekStartISO: state.weekStartISO,
+        stage: stage,
+        daysGoalMet: stats.daysGoalMet,
+        avgPercent: stats.avgPercent
+      });
+      if(state.gardenHistory.length > 12) state.gardenHistory.length = 12;
+      state.weekStartISO = curMondayISO;
+    }
+    save();
+  }
+
+  /* ======================= ACTIVITY / COMPLETION HELPERS ======================= */
+  function activitiesForDate(dateISO){
+    var d = parseISO(dateISO);
+    var dow = d.getDay();
+    return state.activities.filter(function(a){
+      return a.days.indexOf(dow) !== -1;
+    });
+  }
+  function isDone(dateISO, actId){
+    return !!(state.completions[dateISO] && state.completions[dateISO][actId]);
+  }
+  function toggleDone(dateISO, actId){
+    if(!state.completions[dateISO]) state.completions[dateISO] = {};
+    state.completions[dateISO][actId] = !state.completions[dateISO][actId];
+    save();
+    renderAll();
+  }
+  function completionPercent(dateISO){
+    var acts = activitiesForDate(dateISO);
+    if(acts.length === 0) return null; // no activities scheduled
+    var done = acts.filter(function(a){ return isDone(dateISO, a.id); }).length;
+    return Math.round((done/acts.length)*100);
+  }
+  function goalMet(dateISO){
+    var pct = completionPercent(dateISO);
+    if(pct === null) return false;
+    return pct >= state.dailyGoalPercent;
+  }
+
+  function computeStageForWeek(weekStartISO){
+    var mon = parseISO(weekStartISO);
+    var stage = 0;
+    for(var i=0;i<7;i++){
+      var dISO = todayISO(addDays(mon, i));
+      if(dISO > todayISO()) break; // future days don't count
+      if(goalMet(dISO)) stage++;
+    }
+    return Math.min(stage, 7);
+  }
+  function computeWeekStats(weekStartISO){
+    var mon = parseISO(weekStartISO);
+    var totalPct = 0, countedDays = 0, daysGoalMet = 0, totalDone = 0, totalTasks=0;
+    for(var i=0;i<7;i++){
+      var dISO = todayISO(addDays(mon, i));
+      if(dISO > todayISO()) break;
+      var acts = activitiesForDate(dISO);
+      if(acts.length===0) continue;
+      countedDays++;
+      var pct = completionPercent(dISO);
+      totalPct += pct;
+      totalDone += acts.filter(function(a){return isDone(dISO,a.id);}).length;
+      totalTasks += acts.length;
+      if(goalMet(dISO)) daysGoalMet++;
+    }
+    return {
+      avgPercent: countedDays? Math.round(totalPct/countedDays) : 0,
+      daysGoalMet: daysGoalMet,
+      totalDone: totalDone,
+      totalTasks: totalTasks
+    };
+  }
+
+  /* ======================= TREE SVG ======================= */
+  function treeSVG(stage){
+    // stage 0..7
+    var canopyOpacity = stage>=4 ? 1 : (stage>=1? 0.35+stage*0.12 : 0);
+    var canopyScale = 0.5 + (Math.min(stage,7)/7)*0.7;
+    var trunkH = 20 + stage*11;
+    var showFlowers = stage>=5 && stage<7;
+    var showFruit = stage>=6;
+    var branches = stage>=3;
+
+    var flowers = "", fruits = "";
+    if(showFlowers){
+      var fpos = [[-34,-70],[20,-82],[-8,-95],[36,-60],[-40,-92]];
+      for(var i=0;i<Math.min(fpos.length, (stage-4)*2);i++){
+        flowers += '<circle cx="'+(140+fpos[i][0])+'" cy="'+(150+fpos[i][1])+'" r="4.5" fill="var(--amber)" opacity="0.9"/>';
+      }
+    }
+    if(showFruit){
+      var frpos = [[-30,-65],[24,-78],[-4,-92],[40,-58],[-44,-88],[8,-105]];
+      for(var j=0;j<Math.min(frpos.length, (stage-5)*2);j++){
+        fruits += '<circle cx="'+(140+frpos[j][0])+'" cy="'+(150+frpos[j][1])+'" r="5.5" fill="var(--clay)"/>';
+      }
+    }
+
+    var svg = ''+
+    '<svg viewBox="0 0 280 190" width="100%" height="auto" role="img" aria-label="Tree illustration, stage '+stage+' of 7">'+
+      '<ellipse cx="140" cy="172" rx="70" ry="9" fill="var(--ink)" opacity="0.06"/>'+
+      '<path d="M78 172 Q140 158 202 172 L196 178 Q140 168 84 178 Z" fill="var(--soil,#7A5B3F)" opacity="0"/>'+
+      '<path d="M70 172 C70 160 210 160 210 172 L200 180 C160 172 120 172 80 180 Z" fill="#7A5B3F"/>'+
+      (stage===0 ?
+        '<circle cx="140" cy="166" r="4" fill="#5C4430"/>'
+        :
+        '<rect x="136" y="'+(172-trunkH)+'" width="'+(6+stage*0.6)+'" height="'+trunkH+'" rx="3" fill="#7A5B3F" transform="translate('+(-(3+stage*0.3))+',0)"/>'
+      )+
+      (branches ? '<path d="M140 '+(172-trunkH*0.55)+' Q120 '+(172-trunkH*0.7)+' 108 '+(172-trunkH*0.85)+' M140 '+(172-trunkH*0.6)+' Q160 '+(172-trunkH*0.75)+' 172 '+(172-trunkH*0.9)+'" stroke="#7A5B3F" stroke-width="4" fill="none" stroke-linecap="round"/>' : '')+
+      '<g style="opacity:'+canopyOpacity+'; transform-origin:140px 150px; transform:scale('+canopyScale+');">'+
+        '<circle cx="140" cy="150" r="34" fill="var(--sprout)"/>'+
+        '<circle cx="110" cy="162" r="22" fill="var(--sprout)"/>'+
+        '<circle cx="172" cy="162" r="22" fill="var(--sprout)"/>'+
+        '<circle cx="140" cy="118" r="24" fill="var(--sprout)"/>'+
+      '</g>'+
+      (stage>=1 && stage<4 ? '<path d="M140 172 Q136 '+(172-trunkH)+' 140 '+(172-trunkH-6)+'" stroke="var(--moss)" stroke-width="3" fill="none"/><ellipse cx="132" cy="'+(172-trunkH+2)+'" rx="8" ry="4" fill="var(--sprout)" transform="rotate(-30 132 '+(172-trunkH+2)+')"/><ellipse cx="149" cy="'+(172-trunkH-2)+'" rx="8" ry="4" fill="var(--sprout)" transform="rotate(20 149 '+(172-trunkH-2)+')"/>' : '')+
+      flowers + fruits +
+    '</svg>';
+    return svg;
+  }
+
+  /* ======================= RENDER: TODAY ======================= */
+  function renderToday(){
+    var today = todayISO();
+    var stage = computeStageForWeek(state.weekStartISO);
+    document.getElementById("treeSvgHolder").innerHTML = treeSVG(stage);
+    document.getElementById("stageLabel").textContent = STAGE_LABELS[stage];
+    document.getElementById("stageSub").textContent = "Stage "+stage+" of 7";
+
+    var mon = parseISO(state.weekStartISO);
+    var sun = addDays(mon,6);
+    document.getElementById("weekRangeLabel").textContent =
+      "WEEK OF " + mon.getDate()+"/"+(mon.getMonth()+1) + " – " + sun.getDate()+"/"+(sun.getMonth()+1);
+
+    // week ring
+    var ring = document.getElementById("weekRing");
+    ring.innerHTML = "";
+    for(var i=0;i<7;i++){
+      var dISO = todayISO(addDays(mon,i));
+      var dow = parseISO(dISO).getDay();
+      var cls = "ring-dot";
+      if(dISO === today) cls += " today";
+      if(dISO < today){
+        var acts = activitiesForDate(dISO);
+        if(acts.length>0){
+          cls += goalMet(dISO) ? " done" : " missed";
+        }
+      } else if(dISO === today && goalMet(dISO)){
+        cls += " done";
+      }
+      var dot = document.createElement("div");
+      dot.className = cls;
+      dot.textContent = DAY_LABELS[dow][0];
+      ring.appendChild(dot);
+    }
+
+    var pct = completionPercent(today);
+    var pctShown = pct===null? 0 : pct;
+    document.getElementById("goalBarFill").style.width = pctShown+"%";
+    document.getElementById("goalPctLabel").textContent = pctShown+"%";
+    document.getElementById("goalTargetLabel").textContent = state.dailyGoalPercent+"%";
+
+    renderTaskList();
+  }
+
+  function renderTaskList(){
+    var today = todayISO();
+    var acts = activitiesForDate(today).slice().sort(function(a,b){ return a.time.localeCompare(b.time); });
+    var list = document.getElementById("taskList");
+    if(acts.length===0){
+      list.innerHTML = '<div class="empty-state"><span class="emoji">🌱</span>No activities scheduled today.<br>Tap "+ Add" to start planting.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    acts.forEach(function(a){
+      var done = isDone(today, a.id);
+      var row = document.createElement("div");
+      row.className = "task-item" + (done? " done":"");
+      row.innerHTML =
+        '<button class="check" data-id="'+a.id+'" aria-label="Mark as done">'+
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+        '</button>'+
+        '<div class="task-body">'+
+          '<div class="task-title">'+escapeHTML(a.title)+'</div>'+
+          '<div class="task-meta">'+a.time+' · '+a.days.map(function(d){return DAY_LABELS[d];}).join(", ")+(a.alarm? ' · 🔔':'')+'</div>'+
+        '</div>'+
+        '<button class="task-del" data-del="'+a.id+'" aria-label="Delete">✕</button>';
+      list.appendChild(row);
+    });
+    list.querySelectorAll(".check").forEach(function(btn){
+      btn.addEventListener("click", function(){ toggleDone(today, btn.getAttribute("data-id")); });
+    });
+    list.querySelectorAll("[data-del]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-del");
+        if(confirm("Delete this activity?")){
+          state.activities = state.activities.filter(function(a){return a.id!==id;});
+          save(); renderAll();
+        }
+      });
+    });
+  }
+
+  /* ======================= RENDER: GARDEN ======================= */
+  function renderGarden(){
+    var grid = document.getElementById("historyGrid");
+    if(state.gardenHistory.length===0){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><span class="emoji">🪴</span>No completed weeks yet.</div>';
+    } else {
+      grid.innerHTML = "";
+      var emojis = ["🌰","🌱","🌿","🌿","🌳","🌸","🍎","🌳"];
+      state.gardenHistory.forEach(function(h){
+        var mon = parseISO(h.weekStartISO);
+        var item = document.createElement("div");
+        item.className = "history-item";
+        item.innerHTML = '<div class="mini-tree">'+emojis[h.stage]+'</div><div class="h-label">'+mon.getDate()+'/'+(mon.getMonth()+1)+'<br>'+h.stage+'/7</div>';
+        grid.appendChild(item);
+      });
+    }
+    document.getElementById("goalInput").value = state.dailyGoalPercent;
+    if(window.Notification){
+      document.getElementById("notifPermBtn").textContent =
+        Notification.permission === "granted" ? "Granted ✓" : "Request permission";
+    } else {
+      document.getElementById("notifPermBtn").textContent = "Not supported";
+      document.getElementById("notifPermBtn").disabled = true;
+    }
+  }
+
+  /* ======================= RENDER: INSIGHTS ======================= */
+  function renderInsights(){
+    var stats = computeWeekStats(state.weekStartISO);
+    var stage = computeStageForWeek(state.weekStartISO);
+    var summary = document.getElementById("summaryGrid");
+    summary.innerHTML =
+      statBox(stats.totalDone+"/"+stats.totalTasks, "Tasks completed this week") +
+      statBox(stats.avgPercent+"%", "Daily average") +
+      statBox(stats.daysGoalMet+" days", "Target reached") +
+      statBox(stage+"/7", "Current tree stage");
+
+    var bars = document.getElementById("chartBars");
+    bars.innerHTML = "";
+    var today = new Date();
+    for(var i=6;i>=0;i--){
+      var d = addDays(today, -i);
+      var dISO = todayISO(d);
+      var pct = completionPercent(dISO);
+      var pctShown = pct===null? 0 : pct;
+      var met = pct!==null && pct >= state.dailyGoalPercent;
+      var col = document.createElement("div");
+      col.className = "bar-col";
+      col.innerHTML =
+        '<div class="bar'+(met?' goal-met':'')+'" style="height:'+Math.max(pctShown,3)+'%"></div>'+
+        '<div class="bar-day">'+DAY_LABELS[d.getDay()]+'</div>';
+      bars.appendChild(col);
+    }
+
+    var todayISOv = todayISO();
+    var tPct = completionPercent(todayISOv);
+    var acts = activitiesForDate(todayISOv);
+    var detail = acts.length===0
+      ? "No activities scheduled today."
+      : (acts.filter(function(a){return isDone(todayISOv,a.id);}).length)+" of "+acts.length+" activities done ("+tPct+"%). "+
+        (tPct>=state.dailyGoalPercent ? "Daily target reached — your tree is about to grow! 🌿" : "You need "+state.dailyGoalPercent+"% for the tree to grow today.");
+    document.getElementById("dailyGoalDetail").textContent = detail;
+  }
+  function statBox(num,label){
+    return '<div class="stat-box"><div class="stat-num">'+num+'</div><div class="stat-label">'+label+'</div></div>';
+  }
+
+  /* ======================= RENDER: READ ======================= */
+  function dayOfYear(d){
+    var start = new Date(d.getFullYear(),0,0);
+    var diff = d - start;
+    return Math.floor(diff / 86400000);
+  }
+  function renderRead(){
+    var idx = dayOfYear(new Date()) % ARTICLES.length;
+    var featured = ARTICLES[idx];
+    document.getElementById("featuredArticle").innerHTML =
+      '<span class="featured-tag">Today&#39;s pick</span>'+
+      articleCard(featured);
+
+    var list = document.getElementById("articleList");
+    list.innerHTML = "";
+    ARTICLES.forEach(function(a,i){
+      if(i===idx) return;
+      list.innerHTML += articleCard(a);
+    });
+  }
+  function articleCard(a){
+    return '<a class="article-card" href="'+a.url+'" target="_blank" rel="noopener noreferrer">'+
+      '<span class="article-source">'+a.source+'</span>'+
+      '<div class="article-title">'+a.title+'</div>'+
+      '<div class="article-desc">'+a.desc+'</div>'+
+    '</a>';
+  }
+
+  function escapeHTML(s){
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function renderAll(){
+    rolloverIfNeeded();
+    var now = new Date();
+    document.getElementById("todayPill").textContent =
+      DAY_LABELS_FULL[now.getDay()]+", "+now.getDate()+"/"+(now.getMonth()+1)+"/"+now.getFullYear();
+    renderToday();
+    renderGarden();
+    renderInsights();
+    renderRead();
+  }
+
+  /* ======================= TABS ======================= */
+  document.querySelectorAll(".tab-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active");});
+      document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});
+      btn.classList.add("active");
+      document.getElementById("view-"+btn.getAttribute("data-view")).classList.add("active");
+      window.scrollTo(0,0);
+    });
+  });
+
+  /* ======================= ADD ACTIVITY SHEET ======================= */
+  var selectedDays = [new Date().getDay()];
+  function renderDayPicker(){
+    var wrap = document.getElementById("dayPicker");
+    wrap.innerHTML = "";
+    for(var i=0;i<7;i++){
+      (function(i){
+        var chip = document.createElement("div");
+        chip.className = "day-chip" + (selectedDays.indexOf(i)!==-1? " on":"");
+        chip.textContent = DAY_LABELS[i];
+        chip.addEventListener("click", function(){
+          var pos = selectedDays.indexOf(i);
+          if(pos===-1) selectedDays.push(i); else selectedDays.splice(pos,1);
+          renderDayPicker();
+        });
+        wrap.appendChild(chip);
+      })(i);
+    }
+  }
+  document.getElementById("openAddSheet").addEventListener("click", function(){
+    document.getElementById("taskTitle").value = "";
+    document.getElementById("taskTime").value = "07:00";
+    document.getElementById("taskAlarmToggle").checked = true;
+    selectedDays = [new Date().getDay()];
+    renderDayPicker();
+    document.getElementById("sheetBackdrop").classList.add("open");
+  });
+  document.getElementById("closeSheet").addEventListener("click", closeSheet);
+  document.getElementById("sheetBackdrop").addEventListener("click", function(e){
+    if(e.target === this) closeSheet();
+  });
+  function closeSheet(){ document.getElementById("sheetBackdrop").classList.remove("open"); }
+
+  document.getElementById("saveTaskBtn").addEventListener("click", function(){
+    var title = document.getElementById("taskTitle").value.trim();
+    var time = document.getElementById("taskTime").value || "07:00";
+    if(!title){ alert("Please enter an activity name first."); return; }
+    if(selectedDays.length===0){ alert("Pick at least one day."); return; }
+    state.activities.push({
+      id: "a"+Date.now()+Math.random().toString(16).slice(2),
+      title: title,
+      time: time,
+      days: selectedDays.slice().sort(),
+      alarm: document.getElementById("taskAlarmToggle").checked,
+      createdAt: Date.now()
+    });
+    save();
+    closeSheet();
+    renderAll();
+  });
+
+  /* ======================= GOAL SETTING ======================= */
+  document.getElementById("saveGoalBtn").addEventListener("click", function(){
+    var v = parseInt(document.getElementById("goalInput").value, 10);
+    if(isNaN(v) || v<10 || v>100){ alert("Enter a number between 10–100."); return; }
+    state.dailyGoalPercent = v;
+    save();
+    renderAll();
+  });
+
+  /* ======================= RESET ======================= */
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(confirm("Are you sure you want to delete all GrowList data? This cannot be undone.")){
+      localStorage.removeItem(STORAGE_KEY);
+      state = defaultData();
+      save();
+      renderAll();
+    }
+  });
+
+  /* ======================= NOTIFICATIONS & ALARM ======================= */
+  document.getElementById("notifPermBtn").addEventListener("click", function(){
+    if(!window.Notification){ return; }
+    Notification.requestPermission().then(function(){ renderGarden(); });
+  });
+
+  function beep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var times = [0, 0.4, 0.8];
+      times.forEach(function(t){
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 740;
+        gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.35, audioCtx.currentTime + t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + t + 0.3);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + t);
+        osc.stop(audioCtx.currentTime + t + 0.32);
+      });
+    }catch(e){}
+  }
+
+  function checkAlarms(){
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2,'0');
+    var mm = String(now.getMinutes()).padStart(2,'0');
+    var nowHM = hh+":"+mm;
+    var dow = now.getDay();
+    state.activities.forEach(function(a){
+      if(a.days.indexOf(dow)===-1) return;
+      if(a.time !== nowHM) return;
+      if(firedToday[a.id]) return;
+      firedToday[a.id] = true;
+      fireAlarm(a);
+    });
+  }
+  function fireAlarm(activity){
+    if(window.Notification && Notification.permission === "granted"){
+      try{
+        new Notification("Time for: "+activity.title, {
+          body: "Scheduled at "+activity.time+" — complete it to keep your tree growing 🌱",
+          tag: activity.id
+        });
+      }catch(e){}
+    }
+    if(activity.alarm && document.getElementById("soundToggle").checked){
+      beep();
+    }
+    document.getElementById("alarmTaskTitle").textContent = activity.title;
+    document.getElementById("alarmTaskTime").textContent = "Scheduled at "+activity.time;
+    document.getElementById("alarmModal").classList.add("open");
+  }
+  document.getElementById("dismissAlarm").addEventListener("click", function(){
+    document.getElementById("alarmModal").classList.remove("open");
+  });
+
+  alarmInterval = setInterval(function(){
+    rolloverIfNeeded();
+    checkAlarms();
+  }, 15000);
+
+  /* ======================= MANIFEST (best effort) ======================= */
+  try{
+    var manifest = {
+      name: "GrowList — Schedule & Productivity",
+      short_name: "GrowList",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#EEF1E7",
+      theme_color: "#4B6B4A",
+      icons: [{
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234B6B4A'/%3E%3Cpath d='M50 78V44' stroke='%23EEF1E7' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='34' r='22' fill='%238FB08A'/%3E%3Ccircle cx='34' cy='46' r='14' fill='%238FB08A'/%3E%3Ccircle cx='66' cy='46' r='14' fill='%238FB08A'/%3E%3C/svg%3E",
+        sizes: "100x100",
+        type: "image/svg+xml"
+      }]
+    };
+    var blob = new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"});
+    document.getElementById("manifestLink").href = URL.createObjectURL(blob);
+  }catch(e){}
+
+  /* ======================= INIT ======================= */
+  renderAll();
+
+})();
+</script>
+</body>
+</html>
